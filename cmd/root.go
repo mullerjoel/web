@@ -1,18 +1,15 @@
-/*
-Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
-	"os"
-
+	"errors"
+	"fmt"
 	"github.com/spf13/cobra"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 )
 
-
-
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "web",
 	Short: "A brief description of your application",
@@ -22,13 +19,97 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Args: cobra.ArbitraryArgs,
+	Run:  runOpen,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+var (
+	openFlag  bool
+	copyFlag  bool
+	printFlag bool
+)
+
+func runFzf(items []string) (string, error) {
+	cmd := exec.Command("fzf")
+	cmd.Stdin = strings.NewReader(strings.Join(items, "\n"))
+	cmd.Stderr = os.Stderr
+
+	out, err := cmd.Output()
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) && exitErr.ExitCode() == 130 {
+		return "", errors.New("no selection made")
+	}
+	if err != nil {
+		return "", fmt.Errorf("fzf failed: %w", err)
+	}
+
+	result := strings.TrimSpace(string(out))
+	if result == "" {
+		return "", errors.New("no selection made")
+	}
+	return result, nil
+}
+
+func openUrl(url string) error {
+	var cmd string
+	var args = []string{url}
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+	default:
+		cmd = "xdg-open"
+	}
+	return exec.Command(cmd, args...).Start()
+}
+
+func copyUrl(url string) error {
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "pbcopy"
+	case "windows":
+		cmd = "clip"
+	default: // linux
+		cmd = "xclip"
+		args = []string{"-selection", "clipboard"}
+	}
+
+	command := exec.Command(cmd, args...)
+	command.Stdin = strings.NewReader(url)
+	return command.Run()
+}
+
+func printUrl(url string) {
+	fmt.Println(url)
+}
+
+func runOpen(cmd *cobra.Command, args []string) {
+	if !openFlag && !copyFlag && !printFlag {
+		openFlag = true
+	}
+
+	urls := []string{"https://apple.com", "https://youtube.com", "https://google.com"}
+	url, err := runFzf(urls)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+
+	if openFlag {
+		openUrl(url)
+	}
+	if copyFlag {
+		copyUrl(url)
+	}
+	if printFlag {
+		printUrl(url)
+	}
+}
+
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -37,15 +118,7 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.web.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolVarP(&openFlag, "open", "o", false, "open the url")
+	rootCmd.Flags().BoolVarP(&copyFlag, "copy", "c", false, "copy the url to clipboard")
+	rootCmd.Flags().BoolVarP(&printFlag, "print", "p", false, "print the url to stdout")
 }
-
-
