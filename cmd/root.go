@@ -1,13 +1,10 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
 	"github.com/spf13/cobra"
 	"os"
-	"os/exec"
-	"runtime"
-	"strings"
+	"web/internal/execute"
+	"web/internal/reader"
 )
 
 var rootCmd = &cobra.Command{
@@ -29,84 +26,22 @@ var (
 	printFlag bool
 )
 
-func runFzf(items []string) (string, error) {
-	cmd := exec.Command("fzf")
-	cmd.Stdin = strings.NewReader(strings.Join(items, "\n"))
-	cmd.Stderr = os.Stderr
-
-	out, err := cmd.Output()
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) && exitErr.ExitCode() == 130 {
-		return "", errors.New("no selection made")
-	}
-	if err != nil {
-		return "", fmt.Errorf("fzf failed: %w", err)
-	}
-
-	result := strings.TrimSpace(string(out))
-	if result == "" {
-		return "", errors.New("no selection made")
-	}
-	return result, nil
-}
-
-func openUrl(url string) error {
-	var cmd string
-	var args = []string{url}
-
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = "open"
-	default:
-		cmd = "xdg-open"
-	}
-	return exec.Command(cmd, args...).Start()
-}
-
-func copyUrl(url string) error {
-	var cmd string
-	var args []string
-
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = "pbcopy"
-	case "windows":
-		cmd = "clip"
-	default: // linux
-		cmd = "xclip"
-		args = []string{"-selection", "clipboard"}
-	}
-
-	command := exec.Command(cmd, args...)
-	command.Stdin = strings.NewReader(url)
-	return command.Run()
-}
-
-func printUrl(url string) {
-	fmt.Println(url)
-}
-
 func runOpen(cmd *cobra.Command, args []string) {
 	if !openFlag && !copyFlag && !printFlag {
 		openFlag = true
 	}
 
-	urls := []string{"https://apple.com", "https://youtube.com", "https://google.com"}
-	url, err := runFzf(urls)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
-	}
+	items := reader.Read()
+	url := execute.RunFzf(items)
 
 	if openFlag {
-		openUrl(url)
+		execute.OpenUrl(url)
 	}
 	if copyFlag {
-		copyUrl(url)
+		execute.CopyUrl(url)
 	}
 	if printFlag {
-		printUrl(url)
+		execute.PrintUrl(url)
 	}
 }
 
