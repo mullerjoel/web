@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -12,7 +13,18 @@ import (
 	"web/internal/reader"
 )
 
-func renderLines(items []reader.Item) (lines []string, urlByLine map[string]string) {
+type FindType int
+
+const (
+	Url FindType = iota
+	Repo
+)
+
+func renderLines(items []reader.Item, findType FindType) (lines []string, urlByLine map[string]string) {
+	if len(items) == 0 {
+		return nil, map[string]string{}
+	}
+
 	var buf bytes.Buffer
 	format := tabwriter.NewWriter(&buf, 0, 0, 6, ' ', 0)
 	for _, item := range items {
@@ -24,7 +36,11 @@ func renderLines(items []reader.Item) (lines []string, urlByLine map[string]stri
 
 	urlByLine = make(map[string]string, len(items))
 	for i, line := range lines {
-		urlByLine[line] = items[i].URL
+		if findType == Url {
+			urlByLine[line] = items[i].URL
+		} else {
+			urlByLine[line] = items[i].Git
+		}
 	}
 
 	return lines, urlByLine
@@ -46,8 +62,8 @@ func runFzf(lines []string) string {
 	return strings.TrimRight(string(out), "\n")
 }
 
-func RunFzf(items []reader.Item) string {
-	lines, urlByLine := renderLines(items)
+func FindUrl(items []reader.Item, findType FindType) string {
+	lines, urlByLine := renderLines(items, findType)
 
 	selected := runFzf(lines)
 
@@ -70,6 +86,14 @@ func OpenUrl(url string) error {
 		cmd = "xdg-open"
 	}
 	return exec.Command(cmd, args...).Start()
+}
+
+func CloneRepo(url string) error {
+	args := []string{"clone", url}
+	cmd := exec.Command("git", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func CopyUrl(url string) error {

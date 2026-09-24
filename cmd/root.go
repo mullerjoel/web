@@ -32,7 +32,7 @@ func runOpen(cmd *cobra.Command, args []string) {
 	}
 
 	items := reader.Read()
-	url := execute.RunFzf(items)
+	url := execute.FindUrl(items, execute.Url)
 
 	if openFlag {
 		execute.OpenUrl(url)
