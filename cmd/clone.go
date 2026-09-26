@@ -4,11 +4,11 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"github.com/spf13/cobra"
 	"web/internal/execute"
+	"web/internal/find"
 	"web/internal/gitclone"
 	"web/internal/reader"
-
-	"github.com/spf13/cobra"
 )
 
 // cloneCmd represents the clone command
@@ -25,24 +25,35 @@ to quickly create a Cobra application.`,
 }
 
 var (
-	sshFlag            bool
-	httpsFlag          bool
-	autoFlag           bool
-	copyCloneLinkFlag  bool
-	printCloneLinkFlag bool
+	autoSsh        bool
+	autoHttps      bool
+	copyCloneLink  bool
+	printCloneLink bool
 )
 
 func runClone(cmd *cobra.Command, args []string) {
 	items := reader.Read()
-	filtered := gitclone.FillRepos(items, sshFlag)
-	url := execute.FindUrl(filtered, execute.Repo)
+	if autoSsh || autoHttps {
+		items = gitclone.GetItemRepo(items)
+	} 
 
+	item := find.FindItem(items)
+	url := item.Git
+
+	if autoSsh {
+		url = item.Gitssh
+	}
+	if autoHttps {
+		url = item.GitHttps
+	}
+
+	// TODO: Handle the errors
 	execute.CloneRepo(url)
 
-	if copyCloneLinkFlag {
+	if copyCloneLink {
 		execute.CopyUrl(url)
 	}
-	if printCloneLinkFlag {
+	if printCloneLink {
 		execute.PrintUrl(url)
 	}
 }
@@ -50,11 +61,10 @@ func runClone(cmd *cobra.Command, args []string) {
 func init() {
 	rootCmd.AddCommand(cloneCmd)
 
-	cloneCmd.Flags().BoolVar(&sshFlag, "ssh", false, "clone the repository with ssh")
-	cloneCmd.Flags().BoolVar(&httpsFlag, "https", false, "clone the repository with https")
-	cloneCmd.Flags().BoolVarP(&autoFlag, "auto", "a", false, "automatically detect repositories")
-	cloneCmd.Flags().BoolVarP(&copyCloneLinkFlag, "copy", "c", false, "copy the clone url to clipboard")
-	cloneCmd.Flags().BoolVarP(&printCloneLinkFlag, "print", "p", false, "print the clone url to stdout")
+	cloneCmd.Flags().BoolVar(&autoSsh, "auto-ssh", false, "automatically detect repositories and clone the repository with ssh")
+	cloneCmd.Flags().BoolVar(&autoHttps, "auto-https", false, "automatically detect repositories and clone the repository with https")
+	cloneCmd.Flags().BoolVarP(&copyCloneLink, "copy", "c", false, "copy the clone url to clipboard")
+	cloneCmd.Flags().BoolVarP(&printCloneLink, "print", "p", false, "print the clone url to stdout")
 
-	cloneCmd.MarkFlagsMutuallyExclusive("ssh", "https")
+	cloneCmd.MarkFlagsMutuallyExclusive("auto-ssh", "auto-https")
 }

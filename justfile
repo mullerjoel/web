@@ -8,3 +8,6 @@ test:
 
 build:
   go build
+
+copy:
+  find . -name '*.go' -exec cat {} \; | pbcopy

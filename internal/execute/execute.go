@@ -1,78 +1,32 @@
 package execute
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 	"strings"
-	"text/tabwriter"
-	"web/internal/check"
-	"web/internal/reader"
+	"web/internal/shared"
 )
 
-type FindType int
-
-const (
-	Url FindType = iota
-	Repo
-)
-
-func renderLines(items []reader.Item, findType FindType) (lines []string, urlByLine map[string]string) {
-	if len(items) == 0 {
-		return nil, map[string]string{}
-	}
-
-	var buf bytes.Buffer
-	format := tabwriter.NewWriter(&buf, 0, 0, 6, ' ', 0)
-	for _, item := range items {
-		fmt.Fprintf(format, "%s\t%s\t%s\n", item.Category, item.Name, item.Desc)
-	}
-	format.Flush()
-
-	lines = strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
-
-	urlByLine = make(map[string]string, len(items))
-	for i, line := range lines {
-		if findType == Url {
-			urlByLine[line] = items[i].URL
-		} else {
-			urlByLine[line] = items[i].Git
-		}
-	}
-
-	return lines, urlByLine
-}
-
-func runFzf(lines []string) string {
+func RunFzf(lines []string) int {
 	cmd := exec.Command("fzf")
 	cmd.Stdin = strings.NewReader(strings.Join(lines, "\n"))
 
 	out, err := cmd.Output()
 	if err != nil {
+		msg := "fzf failed"
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) && exitErr.ExitCode() == 130 {
-			check.CheckError(errors.New("no selection made"))
+			msg = "no selection made"
 		}
-		check.CheckError(errors.New("fzf failed"))
+		shared.ThrowErrorWithMessage(msg)
+		return -1
 	}
 
-	return strings.TrimRight(string(out), "\n")
-}
-
-func FindUrl(items []reader.Item, findType FindType) string {
-	lines, urlByLine := renderLines(items, findType)
-
-	selected := runFzf(lines)
-
-	url, ok := urlByLine[selected]
-	if !ok {
-		check.CheckError(errors.New("no selection made"))
-	}
-
-	return url
+	return slices.Index(lines, strings.TrimRight(string(out), "\n"))
 }
 
 func OpenUrl(url string) error {

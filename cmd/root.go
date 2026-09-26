@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"web/internal/execute"
+	"web/internal/find"
 	"web/internal/reader"
 )
 
@@ -32,7 +33,8 @@ func runOpen(cmd *cobra.Command, args []string) {
 	}
 
 	items := reader.Read()
-	url := execute.FindUrl(items, execute.Url)
+	item := find.FindItem(items)
+	url := item.URL
 
 	if openFlag {
 		execute.OpenUrl(url)
