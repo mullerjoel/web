@@ -25,17 +25,17 @@ to quickly create a Cobra application.`,
 }
 
 var (
-	autoSsh        bool
-	autoHttps      bool
-	copyCloneLink  bool
-	printCloneLink bool
+	autoSsh   bool
+	autoHttps bool
 )
 
 func runClone(cmd *cobra.Command, args []string) {
 	items := reader.Read()
 	if autoSsh || autoHttps {
 		items = gitclone.GetItemRepo(items)
-	} 
+	} else {
+		items = gitclone.FilterNoGit(items)
+	}
 
 	item := find.FindItem(items)
 	url := item.Git
@@ -47,15 +47,7 @@ func runClone(cmd *cobra.Command, args []string) {
 		url = item.GitHttps
 	}
 
-	// TODO: Handle the errors
 	execute.CloneRepo(url)
-
-	if copyCloneLink {
-		execute.CopyUrl(url)
-	}
-	if printCloneLink {
-		execute.PrintUrl(url)
-	}
 }
 
 func init() {
@@ -63,8 +55,5 @@ func init() {
 
 	cloneCmd.Flags().BoolVar(&autoSsh, "auto-ssh", false, "automatically detect repositories and clone the repository with ssh")
 	cloneCmd.Flags().BoolVar(&autoHttps, "auto-https", false, "automatically detect repositories and clone the repository with https")
-	cloneCmd.Flags().BoolVarP(&copyCloneLink, "copy", "c", false, "copy the clone url to clipboard")
-	cloneCmd.Flags().BoolVarP(&printCloneLink, "print", "p", false, "print the clone url to stdout")
-
 	cloneCmd.MarkFlagsMutuallyExclusive("auto-ssh", "auto-https")
 }

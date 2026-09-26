@@ -29,28 +29,34 @@ func RunFzf(lines []string) int {
 	return slices.Index(lines, strings.TrimRight(string(out), "\n"))
 }
 
-func OpenUrl(url string) error {
+func OpenUrl(url string) {
 	var cmd string
 	var args = []string{url}
 
 	switch runtime.GOOS {
 	case "darwin":
 		cmd = "open"
+	case "windows":
+		cmd = "rundll32"
+		args = []string{"url.dll,FileProtocolHandler", url}
 	default:
 		cmd = "xdg-open"
 	}
-	return exec.Command(cmd, args...).Start()
+	command := exec.Command(cmd, args...)
+	err := command.Start()
+	shared.CheckError(err)
 }
 
-func CloneRepo(url string) error {
+func CloneRepo(url string) {
 	args := []string{"clone", url}
 	cmd := exec.Command("git", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	err := cmd.Run()
+	shared.CheckError(err)
 }
 
-func CopyUrl(url string) error {
+func CopyUrl(url string) {
 	var cmd string
 	var args []string
 
@@ -59,14 +65,15 @@ func CopyUrl(url string) error {
 		cmd = "pbcopy"
 	case "windows":
 		cmd = "clip"
-	default: // linux
+	default:
 		cmd = "xclip"
 		args = []string{"-selection", "clipboard"}
 	}
 
 	command := exec.Command(cmd, args...)
 	command.Stdin = strings.NewReader(url)
-	return command.Run()
+	err := command.Run()
+	shared.CheckError(err)
 }
 
 func PrintUrl(url string) {

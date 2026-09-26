@@ -1,5 +1,12 @@
 # web
 
+TODO:
+
+No Windows support
+Clean naming
+Clean error message
+Fzf required and check for packages
+
 Commands i ran for creating project structure
 
 ```bash
