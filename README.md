@@ -1,10 +1,10 @@
 # web - open and clone your bookmarks fast
 
-Fuzzy-find URLs bookmarked in `~/.config/web/*.yaml` and open, copy, or print the one you pick. Use `web clone` to clone one of your bookmarks as a git repo instead.
+Fuzzy-find URLs bookmarked in `~/.config/web/*.yaml` and open, copy, or print the one you pick. Use `web clone` to clone one of your bookmarks as a Git repository instead.
 
 ## Usage
 
-### Open, Print and Copy Url
+### Open, Print, and Copy URL
 
 ```txt
 Usage:
@@ -29,7 +29,7 @@ Flags:
   -h, --help         help for clone
 ```
 
-## Instalation
+## Installation
 
 ### Homebrew
 
@@ -38,13 +38,25 @@ If you use Homebrew, you can install the app via the official cask:
 ```bash
 brew install --cask mullerjoel/tap/web
 ```
-### Other platforms
 
-For all other devices, download the latest version from the [web releases page](https://github.com/mullerjoel/web/releases)
+
+### Other Platforms
+
+For all other devices, download the latest version from the [web releases page](https://github.com/mullerjoel/web/releases).
+
+### Build from Source
+
+Make sure [Go](https://go.dev) is installed, then clone the repository and build the binary:
+
+```bash
+go build
+```
+
+You can then move the `web` binary somewhere in your `PATH`.
 
 ## Config File
 
-Store multiple files in `~/.config/web/*.yaml`. The Files should be structured as following:
+Store multiple files in `~/.config/web/*.yaml`. The files should be structured as follows:
 
 ```yaml
 repositories: # multiple labels possible, naming doesn't matter
@@ -52,12 +64,12 @@ repositories: # multiple labels possible, naming doesn't matter
     url: https://github.com/mullerjoel/web
     desc: a very nice binary # optional
     git: git@github.com:mullerjoel/web.git # optional
- -  name: # ... multiple items possible
+  - name: # ... multiple items possible
 ```
 
 ## Shell Completions
 
-When the binary is installed with homebrew, the completions are already installed. With another installation, the completion can be installed as following, for more infos see the [Shell Completion Guide](https://cobra.dev/docs/how-to-guides/shell-completion/)
+When the binary is installed with Homebrew, the completions are already installed. With another installation, the completion can be installed as follows. For more information, see the [Shell Completion Guide](https://cobra.dev/docs/how-to-guides/shell-completion/).
 
 ```bash
 web completion bash
