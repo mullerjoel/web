@@ -1,0 +1,32 @@
+homebrew_casks:
+  - name: web
+    description: "Fuzzy-find and open bookmarked URLs"
+    homepage: "https://github.com/mullerjoel/web"
+    license: "MIT"
+    directory: Casks
+
+    repository:
+      owner: mullerjoel
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+
+    dependencies:
+      - formula: fzf
+
+    generate_completions_from_executable:
+      executable: web
+      args:
+        - completion
+      shell_parameter_format: cobra
+      shells:
+        - bash
+        - zsh
+        - fish
+
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/web"]
+          end

@@ -1,18 +1,67 @@
-# web
+# web - open and clone your bookmarks fast
 
-TODO:
+Fuzzy-find URLs bookmarked in `~/.config/web/*.yaml` and open, copy, or print the one you pick. Use `web clone` to clone one of your bookmarks as a git repo instead.
 
-No Windows support
-Clean naming
-Clean error message
-Fzf required and check for packages
+## Usage
 
-Commands i ran for creating project structure
+### Open, Print and Copy Url
+
+```txt
+Usage:
+  web [flags]
+
+Flags:
+  -c, --copy    copy the selected url to the clipboard
+  -o, --open    open the selected url in your browser
+  -p, --print   print the selected url to stdout
+  -h, --help    help for web
+```
+
+### Clone Repository
+
+```txt
+Usage:
+  web clone [flags]
+
+Flags:
+      --auto-https   use git field (or url as fallback) and clone via https
+      --auto-ssh     use git field (or url as fallback) and clone via ssh
+  -h, --help         help for clone
+```
+
+## Instalation
+
+### Homebrew
+
+If you use Homebrew, you can install the app via the official cask:
 
 ```bash
-go mod init web
-go get github.com/spf13/cobra@latest
-go install github.com/spf13/cobra-cli@latest
-cobra-cli init
-go run main.go
+brew install --cask mullerjoel/tap/web
+```
+### Other platforms
+
+For all other devices, download the latest version from the [web releases page](https://github.com/mullerjoel/web/releases)
+
+## Config File
+
+Store multiple files in `~/.config/web/*.yaml`. The Files should be structured as following:
+
+```yaml
+repositories: # multiple labels possible, naming doesn't matter
+  - name: web
+    url: https://github.com/mullerjoel/web
+    desc: a very nice binary # optional
+    git: git@github.com:mullerjoel/web.git # optional
+ -  name: # ... multiple items possible
+```
+
+## Shell Completions
+
+When the binary is installed with homebrew, the completions are already installed. With another installation, the completion can be installed as following, for more infos see the [Shell Completion Guide](https://cobra.dev/docs/how-to-guides/shell-completion/)
+
+```bash
+web completion bash
+web completion zsh
+web completion fish
+web completion powershell
 ```
