@@ -16,8 +16,6 @@ homebrew_casks:
 
     generate_completions_from_executable:
       executable: web
-      args:
-        - completion
       shell_parameter_format: cobra
       shells:
         - bash
