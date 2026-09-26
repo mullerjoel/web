@@ -11,16 +11,15 @@ import (
 	"web/internal/reader"
 )
 
-// cloneCmd represents the clone command
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Fuzzy-find and git clone a bookmarked repository",
+	Long: `Fuzzy-find a bookmark and git clone it.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+By default only bookmarks with a "git" field are shown, cloned as-is.
+
+--auto-ssh and --auto-https also include bookmarks with just a "url"
+field, and rebuild the URL as SSH or HTTPS before cloning.`,
 	Run: runClone,
 }
 
@@ -52,8 +51,7 @@ func runClone(cmd *cobra.Command, args []string) {
 
 func init() {
 	rootCmd.AddCommand(cloneCmd)
-
-	cloneCmd.Flags().BoolVar(&autoSsh, "auto-ssh", false, "automatically detect repositories and clone the repository with ssh")
-	cloneCmd.Flags().BoolVar(&autoHttps, "auto-https", false, "automatically detect repositories and clone the repository with https")
+	cloneCmd.Flags().BoolVar(&autoSsh, "auto-ssh", false, "use git field (or url as fallback) and clone via ssh")
+	cloneCmd.Flags().BoolVar(&autoHttps, "auto-https", false, "use git field (or url as fallback) and clone via https")
 	cloneCmd.MarkFlagsMutuallyExclusive("auto-ssh", "auto-https")
 }
