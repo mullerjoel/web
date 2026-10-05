@@ -3,7 +3,6 @@ package reader
 import (
 	"fmt"
 	"gopkg.in/yaml.v3"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"web/internal/shared"
@@ -21,20 +20,28 @@ func Read() []shared.Item {
 	home, err := os.UserHomeDir()
 	shared.CheckError(err)
 
-	root := filepath.Join(home, ".config", "web")
 	var dataset []shared.Item
-
-	err = filepath.WalkDir(root, func(path string, _ fs.DirEntry, err error) error {
-		shared.CheckError(err)
-		ext := filepath.Ext(path)
-		if ext == ".yaml" || ext == ".yml" {
-			readFile(path, &dataset)
-		}
-		return nil
-	})
-	shared.CheckError(err)
+	walk(filepath.Join(home, ".config", "web"), &dataset)
 	validateItems(dataset)
 	return dataset
+}
+
+func walk(dir string, dataset *[]shared.Item) {
+	entries, err := os.ReadDir(dir)
+	shared.CheckError(err)
+
+	for _, entry := range entries {
+		path := filepath.Join(dir, entry.Name())
+		info, err := os.Stat(path)
+		if err != nil {
+			continue
+		}
+		if info.IsDir() {
+			walk(path, dataset)
+		} else if ext := filepath.Ext(path); ext == ".yaml" || ext == ".yml" {
+			readFile(path, dataset)
+		}
+	}
 }
 
 func readFile(file string, dataset *[]shared.Item) {
